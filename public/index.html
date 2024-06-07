@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var username;
+
+        while (!username) {
+            username = prompt('Lütfen adınızı girin:');
+        }
+
+        socket.emit('set username', username);
+
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        // Bildirim iznini isteyin
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', { username: username, message: input.value });
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg.username + ': ' + msg.message;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+
+            // Bildirim gösterme
+            if (msg.username !== username && Notification.permission === 'granted') {
+                new Notification('Yeni Mesaj', {
+                    body: `${msg.username}: ${msg.message}`,
+                });
+            }
+        });
+
+        // Sohbeti temizle
+        socket.on('clear chat', function() {
+            document.getElementById('messages').innerHTML = '';
+        });
+
+        // Kullanıcı adı çakışması uyarısı
+        socket.on('username exists', function() {
+            alert('Bu kullanıcı adı zaten kullanılıyor, lütfen başka bir ad seçin.');
+            username = null;
+            while (!username) {
+                username = prompt('Lütfen adınızı girin:');
+            }
+            socket.emit('set username', username);
+        });
+    </script>
+</body>
+</html>
