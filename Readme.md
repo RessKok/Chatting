@@ -18,7 +18,7 @@ cd Chatting
 
 Proje dosyalarını klonladıktan sonra, projenin ana dizinine gidin ve aşağıdaki komutu çalıştırarak proje bağımlılıklarını yükleyin:
 
-````bash
+```bash
 npm init -y
 ```
 
