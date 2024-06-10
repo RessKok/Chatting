@@ -3,19 +3,17 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const readline = require('readline');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Mesajları saklamak için bir dizi oluşturun
-let messages = [];
-let usernames = new Set();  // Kullanıcı adlarını takip etmek için bir set
+let chatHistory = [];
+let usernames = new Set();
 
-// Admin kullanıcı adı
 let admin = "";
 
-// Terminalden admin kullanıcı adını alın
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -25,7 +23,6 @@ rl.question('Admin kullanıcı adını girin: ', (answer) => {
     admin = answer;
     console.log('Admin kullanıcı adı:', admin);
 
-    // Public klasörünü statik dosyalar için ayarlayın
     app.use(express.static(path.join(__dirname, 'public')));
 
     app.get('/', (req, res) => {
@@ -33,7 +30,7 @@ rl.question('Admin kullanıcı adını girin: ', (answer) => {
     });
 
     io.on('connection', (socket) => {
-        console.log('a user connected');
+        console.log('A user connected');
 
         socket.on('set username', (username) => {
             if (usernames.has(username)) {
@@ -42,9 +39,14 @@ rl.question('Admin kullanıcı adını girin: ', (answer) => {
                 usernames.add(username);
                 socket.username = username;
 
-                // Yeni bağlanan kullanıcıya mevcut mesajları gönder
-                messages.forEach((message) => {
-                    socket.emit('chat message', message);
+                console.log(`Username set: ${username}`);
+
+                chatHistory.forEach((item) => {
+                    if (item.type === 'message') {
+                        socket.emit('chat message', item);
+                    } else if (item.type === 'file') {
+                        socket.emit('file upload', item);
+                    }
                 });
             }
         });
@@ -52,30 +54,43 @@ rl.question('Admin kullanıcı adını girin: ', (answer) => {
         socket.on('disconnect', () => {
             if (socket.username) {
                 usernames.delete(socket.username);
+                console.log(`User disconnected: ${socket.username}`);
             }
-            console.log('user disconnected');
         });
 
         socket.on('chat message', (data) => {
-            // Admin kullanıcı adını kontrol et ve "cls" komutunu çalıştır
             if (data.username === admin && data.message === 'cls') {
-                // Mesajları temizle
-                messages = [];
-                // Tüm istemcilere sohbeti temizle sinyali gönder
+                chatHistory = [];
                 io.emit('clear chat');
             } else {
-                // Mesajı sakla
-                messages.push({ username: data.username, message: data.message });
-
-                // Tüm kullanıcılara mesajı gönder
-                io.emit('chat message', { username: data.username, message: data.message });
+                const messageData = { id: uuidv4(), type: 'message', username: data.username, message: data.message, timestamp: Date.now() };
+                chatHistory.push(messageData);
+                io.emit('chat message', messageData);
             }
         });
+
+        socket.on('file upload', (data) => {
+            const fileData = { id: uuidv4(), type: 'file', username: data.username, fileName: data.fileName, fileData: data.fileData, timestamp: Date.now() };
+            chatHistory.push(fileData);
+            io.emit('file upload', fileData);
+        });
+
+        socket.on('delete message', function (msg) {
+            chatHistory = chatHistory.filter(item => item.id !== msg.id);
+            io.emit('message deleted', msg);
+        });
+
+        socket.on('delete file', function(data){
+            chatHistory = chatHistory.filter(item => item.id !== data.id);
+            io.emit('file deleted', data);
+        })
     });
 
-    server.listen(33213, () => {
-        console.log('listening on *:33213');
+    rl.question('Port Giriniz: ', (ans) => {
+        const port = ans;
+        server.listen(port, () => {
+            console.log(`listening on: ${port}`);
+        });
+        rl.close();
     });
-
-    rl.close(); // readline arayüzünü kapat
 });
