@@ -23,7 +23,7 @@ npm init -y
 ```
 
 ```bash
-npm install socket.io express
+npm install socket.io express uuid
 ```
 
 ## Kullanım
@@ -34,7 +34,8 @@ Proje bağımlılıklarını yükledikten sonra, aşağıdaki komutu çalıştı
 node .
 ```
 
-Uygulamayı başlattıktan sonra tarayıcınızdan `http://localhost:33213` adresine giderek chat uygulamasına erişebilirsiniz.
+Uygulamayı başlattıktan sonra terminalden;
+Admin Kullanıcı Adı ve port bilgilerini giriniz, tarayıcınızdan `http://localhost:"ip"` adresine giderek chat uygulamasına erişebilirsiniz.
 
 ## Teknolojiler
 
@@ -47,6 +48,7 @@ Bu proje aşağıdaki teknolojiler kullanılarak geliştirilmiştir:
 
 - [Rasperon C](https://github.com/rasperon)
 - [Yarderun](https://github.com/yarderun)
+
 ## Lisans
 
 Bu proje MIT Lisansı altında lisanslanmıştır. Detaylı bilgi için [LICENSE](LICENSE) dosyasına bakabilirsiniz.
