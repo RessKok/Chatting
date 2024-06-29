@@ -1,0 +1,26 @@
+body::-webkit-scrollbar{
+    display:none;
+}
+
+#messages::-webkit-scrollbar {
+    width: 12px;
+}
+
+.chat-container{
+    overflow-x: hidden;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background-color: #8d8d8d;
+    border-radius: 10px;
+    border: 3px solid #f1f1f1;
+}
+
+#messages::-webkit-scrollbar-thumb:hover {
+    background: #4e4d4d;
+}
